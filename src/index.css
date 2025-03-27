@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.react-flow__node {
+  @apply font-sans;
+}
+
+.react-flow__node-default {
+  @apply shadow-sm;
+}
+
+.react-flow__controls button {
+  @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400;
+}
+
+.react-flow__minimap {
+  @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700;
+}

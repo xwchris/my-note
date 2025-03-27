@@ -1,0 +1,20 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy source code
+COPY src/server ./src/server
+
+# Create data directory
+RUN mkdir -p /app/data
+
+# Use non-root user
+USER node
+
+EXPOSE 3000
+
+CMD ["node", "src/server/index.js"]

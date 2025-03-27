@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: xwchris/notes-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "12000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://home.ulanding.cc:12001
+
+  backend:
+    image: xwchris/notes-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "12001:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=xwchris
+      - ADMIN_USERNAME=xwchris
+      - ADMIN_PASSWORD=499952350
