@@ -1,92 +1,93 @@
-import { useState, useEffect, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { NotesDatabase } from "../db/database";
-import { SyncService } from "../services/SyncService";
-import { Note, SyncStatus, ActivityData } from "../types";
+import { useState, useEffect } from "react";
+import type { Note } from "@/types";
 
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
-  const [activityData, setActivityData] = useState<ActivityData[]>([]);
-  const [totalDays, setTotalDays] = useState(0);
-  const [db] = useState(() => new NotesDatabase());
-  const [syncService] = useState(
-    () =>
-      new SyncService(setSyncStatus, (newActivityData, newTotalDays) => {
-        setActivityData(newActivityData);
-        setTotalDays(newTotalDays);
-      })
-  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadNotes = async () => {
-      const storedNotes = await db.getAllNotes();
-      setNotes(storedNotes);
-    };
-    loadNotes();
-
-    return () => {
-      syncService.destroy();
-    };
+    fetchNotes();
   }, []);
 
-  const addNote = useCallback(async (content: string, tags: string[]) => {
-    const newNote: Note = {
-      uuid: uuidv4(),
-      content,
-      tags,
-      createdAt: new Date().toISOString(),
-      links: [],
-      version: 1,
-      syncStatus: "pending",
-      deleted: 0,
-    };
+  const fetchNotes = async () => {
+    try {
+      const response = await fetch("/api/notes");
+      const data = await response.json();
+      if (response.ok) {
+        setNotes(data.notes);
+      } else {
+        setError(data.error);
+      }
+    } catch (err) {
+      setError("获取笔记失败");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    await syncService.addNote(newNote);
-    setNotes((prev) => [...prev, newNote]);
-  }, []);
+  const addNote = async (note: Omit<Note, "id">) => {
+    try {
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(note),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setNotes(data.notes);
+      } else {
+        setError(data.error);
+      }
+    } catch (err) {
+      setError("添加笔记失败");
+    }
+  };
 
-  const updateNote = useCallback(
-    async (uuid: string, content: string, tags: string[], links: string[]) => {
-      const noteToUpdate = notes.find((note) => note.uuid === uuid);
-      if (!noteToUpdate) return;
+  const updateNote = async (note: Note) => {
+    try {
+      const response = await fetch("/api/notes", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(note),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setNotes(data.notes);
+      } else {
+        setError(data.error);
+      }
+    } catch (err) {
+      setError("更新笔记失败");
+    }
+  };
 
-      const updatedNote: Note = {
-        ...noteToUpdate,
-        content,
-        tags,
-        links,
-        lastEdited: new Date().toISOString(),
-        version: (noteToUpdate.version || 1) + 1,
-        syncStatus: "pending",
-      };
-
-      await syncService.updateNote(updatedNote);
-      setNotes((prev) =>
-        prev.map((note) => (note.uuid === uuid ? updatedNote : note))
-      );
-    },
-    [notes]
-  );
-
-  const deleteNote = useCallback(
-    async (uuid: string) => {
-      const noteToDelete = notes.find((note) => note.uuid === uuid);
-      if (!noteToDelete) return;
-
-      await syncService.deleteNote(uuid);
-      setNotes((prev) => prev.filter((note) => note.uuid !== uuid));
-    },
-    [notes]
-  );
+  const deleteNote = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notes?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setNotes(data.notes);
+      } else {
+        setError(data.error);
+      }
+    } catch (err) {
+      setError("删除笔记失败");
+    }
+  };
 
   return {
     notes,
+    loading,
+    error,
     addNote,
     updateNote,
     deleteNote,
-    syncStatus,
-    activityData,
-    totalDays,
   };
 }
