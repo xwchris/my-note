@@ -1,34 +1,24 @@
 import React from "react";
-import { Hash, BarChart2, Calendar, Tag as TagIcon, X } from "lucide-react";
-import { Note, ActivityData } from "../types";
-import ActivityChart from "./ActivityChart";
+import { Hash, Calendar, Tag as TagIcon, X } from "lucide-react";
+import type { Note, Tag } from "@/types";
 
 interface SidebarProps {
   notes: Note[];
-  tags: string[];
-  activityData: ActivityData[];
-  selectedTag: string | null;
-  onTagSelect: (tag: string | null) => void;
-  darkMode: boolean;
-  isOpen: boolean;
-  onClose: () => void;
+  tags: Tag[];
+  selectedTag?: string;
+  onTagSelect: (tag: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 function Sidebar({
   notes,
   tags,
-  activityData,
   selectedTag,
   onTagSelect,
-  darkMode,
-  isOpen,
-  onClose,
+  isOpen = false,
+  onClose = () => {},
 }: SidebarProps) {
-  const tagCounts = tags.reduce((acc, tag) => {
-    acc[tag] = notes.filter((note) => note.tags.includes(tag)).length;
-    return acc;
-  }, {} as Record<string, number>);
-
   const daysWithNotes = new Set(
     notes.map((note) => new Date(note.createdAt).toISOString().split("T")[0])
   ).size;
@@ -106,17 +96,6 @@ function Sidebar({
                   </span>
                 </div>
               </div>
-
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <h3 className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
-                  <BarChart2
-                    className="text-indigo-600 dark:text-indigo-400"
-                    size={18}
-                  />
-                  <span>活动记录</span>
-                </h3>
-                <ActivityChart data={activityData} darkMode={darkMode} />
-              </div>
             </div>
           </div>
 
@@ -126,9 +105,9 @@ function Sidebar({
             </h2>
             <div className="space-y-2">
               <button
-                onClick={() => onTagSelect(null)}
+                onClick={() => onTagSelect("")}
                 className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                  selectedTag === null
+                  !selectedTag
                     ? "bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
@@ -137,20 +116,20 @@ function Sidebar({
               </button>
               {tags.map((tag) => (
                 <button
-                  key={tag}
-                  onClick={() => onTagSelect(tag)}
+                  key={tag.name}
+                  onClick={() => onTagSelect(tag.name)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                    selectedTag === tag
+                    selectedTag === tag.name
                       ? "bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200"
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
                   <span className="flex items-center gap-2">
                     <Hash size={16} />
-                    {tag}
+                    {tag.name}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {tagCounts[tag]}
+                    {tag.count}
                   </span>
                 </button>
               ))}
