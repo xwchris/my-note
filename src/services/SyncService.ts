@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Note, SyncStatus, ActivityData } from "@/types";
-import { AuthService } from "./AuthService";
 import { NotesDatabase } from "@/db/database";
 import debounce from "lodash.debounce";
 
@@ -30,9 +29,7 @@ export class SyncService {
   }
 
   private getAuthHeaders() {
-    const token = AuthService.getToken();
     return {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
   }
@@ -41,13 +38,9 @@ export class SyncService {
     try {
       const response = await axios.get(`${API_URL}/ping`, {
         timeout: 2000,
-        headers: this.getAuthHeaders(),
       });
       return response.status === 200;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        AuthService.clearToken();
-      }
+    } catch {
       return false;
     }
   }
@@ -63,16 +56,12 @@ export class SyncService {
   }
 
   private async fetchRemoteNotes(): Promise<Note[]> {
-    const response = await axios.get(`${API_URL}/notes`, {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await axios.get(`${API_URL}/notes`);
     return response.data;
   }
 
   private async fetchStats() {
-    const response = await axios.get(`${API_URL}/stats`, {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await axios.get(`${API_URL}/stats`);
     return response.data;
   }
 
@@ -113,9 +102,6 @@ export class SyncService {
       }
     } catch (error) {
       console.error("Failed to sync note:", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        AuthService.clearToken();
-      }
       this.setStatus("error");
     } finally {
       this.pendingSyncs--;
@@ -169,9 +155,6 @@ export class SyncService {
       this.updateSyncStatus();
     } catch (error) {
       console.error("Full sync failed:", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        AuthService.clearToken();
-      }
       this.setStatus("error");
     } finally {
       this.syncInProgress = false;
@@ -187,7 +170,7 @@ export class SyncService {
     }
 
     // 设置连接状态检查定时器
-    setInterval(async () => {
+    const checkAndUpdateConnection = async () => {
       const newStatus = await this.checkConnection();
       if (newStatus !== this.lastConnectionStatus) {
         this.lastConnectionStatus = newStatus;
@@ -197,7 +180,15 @@ export class SyncService {
           this.setStatus("offline");
         }
       }
-    }, 30000); // 每30秒检查一次连接状态
+      // 无论连接状态是否改变，都更新状态显示
+      this.updateSyncStatus();
+    };
+
+    // 立即执行一次连接检查和状态更新
+    await checkAndUpdateConnection();
+
+    // 然后设置定时重复执行
+    setInterval(checkAndUpdateConnection, 30000); // 每30秒检查一次连接状态
   }
 
   async addNote(note: Note): Promise<void> {
@@ -220,5 +211,24 @@ export class SyncService {
 
   destroy() {
     this.debouncedSync.cancel();
+  }
+
+  // 添加一个公共方法，允许手动触发同步
+  async triggerSync(): Promise<void> {
+    // 检查连接状态
+    const isOnline = await this.checkConnection();
+
+    if (!isOnline) {
+      this.setStatus("offline");
+      return;
+    }
+
+    // 执行完整同步
+    try {
+      await this.performFullSync();
+    } catch (error) {
+      console.error("手动同步失败:", error);
+      this.setStatus("error");
+    }
   }
 }

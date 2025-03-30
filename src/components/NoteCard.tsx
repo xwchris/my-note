@@ -7,6 +7,7 @@ import {
   Link as LinkIcon,
   Calendar,
   Hash,
+  Share2,
 } from "lucide-react";
 import { Note } from "../types";
 import NoteLink from "./NoteLink";
@@ -23,6 +24,7 @@ interface NoteCardProps {
   onDelete: (uuid: string) => void;
   onNoteClick: (uuid: string) => void;
   onTagClick?: (tag: string) => void;
+  onShowRelationGraph?: (noteUuid: string) => void;
 }
 
 function NoteCard({
@@ -32,6 +34,7 @@ function NoteCard({
   onDelete,
   onNoteClick,
   onTagClick,
+  onShowRelationGraph,
 }: NoteCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(note.content);
@@ -248,7 +251,7 @@ function NoteCard({
             <div className="relative group">
               {/* 笔记内容 */}
               <div className="prose prose-lg dark:prose-invert max-w-none mb-4">
-                <p className="whitespace-pre-wrap text-gray-900 dark:text-gray-100 leading-relaxed">
+                <p className="whitespace-pre-line break-words">
                   {note.content}
                 </p>
               </div>
@@ -295,24 +298,32 @@ function NoteCard({
                 </div>
               )}
 
-              {/* 操作按钮 */}
-              <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="flex gap-1 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+              {/* 操作按钮 - 桌面端悬浮显示，移动端常驻 */}
+              <div className="absolute top-0 right-0 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg p-1 shadow-sm">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-gray-500 hover:text-indigo-600 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="编辑"
+                >
+                  <Edit2 size={16} />
+                </button>
+                {onShowRelationGraph && (
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-2 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded"
-                    title="编辑笔记"
+                    onClick={() => onShowRelationGraph(note.uuid)}
+                    className="text-gray-500 hover:text-indigo-600 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                    aria-label="查看关系图"
+                    title="查看此笔记的关系图"
                   >
-                    <Edit2 size={16} />
+                    <Share2 size={16} />
                   </button>
-                  <button
-                    onClick={() => onDelete(note.uuid)}
-                    className="p-2 text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded"
-                    title="删除笔记"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                )}
+                <button
+                  onClick={() => onDelete(note.uuid)}
+                  className="text-gray-500 hover:text-red-600 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="删除"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           </>

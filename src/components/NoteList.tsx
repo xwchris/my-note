@@ -18,6 +18,7 @@ interface NoteListProps {
   onInputClose: () => void;
   onNoteClick: (noteId: string) => void;
   onTagClick?: (tag: string) => void;
+  onShowRelationGraph?: (noteUuid: string) => void;
 }
 
 function NoteList({
@@ -30,6 +31,7 @@ function NoteList({
   onInputClose,
   onNoteClick,
   onTagClick,
+  onShowRelationGraph,
 }: NoteListProps) {
   // Sort notes in reverse chronological order
   const sortedNotes = [...notes].sort((a, b) => {
@@ -58,6 +60,7 @@ function NoteList({
           onDelete={onNoteDelete}
           onNoteClick={onNoteClick}
           onTagClick={onTagClick}
+          onShowRelationGraph={onShowRelationGraph}
         />
       ))}
 

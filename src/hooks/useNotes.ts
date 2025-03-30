@@ -153,6 +153,21 @@ export function useNotes() {
     [notes]
   );
 
+  // 手动触发同步
+  const triggerSync = useCallback(async () => {
+    try {
+      if (!syncServiceRef.current) {
+        throw new Error("同步服务未初始化");
+      }
+
+      setError(null);
+      await syncServiceRef.current.triggerSync();
+    } catch (err) {
+      console.error("手动同步失败:", err);
+      setError("手动同步失败");
+    }
+  }, []);
+
   return {
     notes,
     addNote,
@@ -162,5 +177,6 @@ export function useNotes() {
     activityData,
     totalDays,
     error,
+    triggerSync,
   };
 }

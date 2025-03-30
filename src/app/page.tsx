@@ -12,37 +12,102 @@ import {
   Hash,
   Filter,
   BarChart2,
+  Loader2,
 } from "lucide-react";
 import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import NoteList from "@/components/NoteList";
 import NoteGraph from "@/components/NoteGraph";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import SyncStatus from "@/components/SyncStatus";
 import LoginPage from "@/components/LoginPage";
 import { useNotes } from "@/hooks/useNotes";
-import { AuthService } from "@/services/AuthService";
+import { AuthService, AUTH_EVENTS } from "@/services/AuthService";
 import Stats from "@/components/Stats";
 import "./index.css";
 
 function App() {
-  // 使用 useCallback 来避免不必要的重渲染
+  // 状态定义...
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { notes, addNote, updateNote, deleteNote, syncStatus, activityData } =
-    useNotes();
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const {
+    notes,
+    addNote,
+    updateNote,
+    deleteNote,
+    syncStatus,
+    activityData,
+    triggerSync,
+  } = useNotes();
   const [showInput, setShowInput] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showGraph, setShowGraph] = useState(false);
+  const [focusNoteUuid, setFocusNoteUuid] = useState<string | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showTagFilter, setShowTagFilter] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
+  // 处理关闭关系图时清除焦点笔记
+  const handleCloseGraph = useCallback(() => {
+    setShowGraph(false);
+    setFocusNoteUuid(null);
+  }, []);
+
+  // 处理登录态过期
+  const handleAuthError = useCallback(() => {
+    setIsAuthenticated(false);
+    toast.error("登录已过期，请重新登录");
+  }, []);
+
   // 在组件挂载后初始化客户端状态
   useEffect(() => {
     setMounted(true);
-    setIsAuthenticated(AuthService.isAuthenticated());
-  }, []);
+
+    // 确保拦截器已设置
+    AuthService.setupAxiosInterceptors();
+
+    // 初始化认证状态
+    const initAuth = async () => {
+      setIsAuthenticating(true);
+      const isAuth = AuthService.isAuthenticated();
+
+      if (isAuth) {
+        // 如果有token，验证它是否有效
+        const isValid = await AuthService.validateToken();
+        setIsAuthenticated(isValid);
+
+        if (!isValid) {
+          toast.error("登录已过期，请重新登录");
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+      setIsAuthenticating(false);
+    };
+
+    initAuth();
+
+    // 添加自定义事件监听器
+    const handleCloseNoteGraph = () => {
+      handleCloseGraph();
+    };
+
+    // 监听关系图关闭事件
+    window.addEventListener("closeNoteGraph", handleCloseNoteGraph);
+
+    // 监听认证事件
+    window.addEventListener(AUTH_EVENTS.AUTH_ERROR, handleAuthError);
+    window.addEventListener(AUTH_EVENTS.AUTH_LOGOUT, handleAuthError);
+
+    // 清理函数
+    return () => {
+      window.removeEventListener("closeNoteGraph", handleCloseNoteGraph);
+      window.removeEventListener(AUTH_EVENTS.AUTH_ERROR, handleAuthError);
+      window.removeEventListener(AUTH_EVENTS.AUTH_LOGOUT, handleAuthError);
+    };
+  }, [handleCloseGraph, handleAuthError]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -134,9 +199,47 @@ function App() {
     [notes]
   );
 
+  // 处理显示单个笔记的关系图
+  const handleShowRelationGraph = useCallback((noteUuid: string) => {
+    setFocusNoteUuid(noteUuid);
+    setShowGraph(true);
+  }, []);
+
   // 在客户端渲染完成前不显示内容
   if (!mounted) {
     return null;
+  }
+
+  // 显示加载状态
+  if (isAuthenticating) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 flex items-center justify-center mb-6 shadow-sm">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M9 3V5H12V9H9V21H7V9H4V5H7V3H9Z" fill="white" />
+            <path
+              d="M14 3V15H11V19H15V21H11V19H13V17H14V15H17V13H14V3H16V13H19V15H16V17H15V19H17V21H15V19H19V17H20V13H17V3H14Z"
+              fill="white"
+            />
+          </svg>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="flex items-center space-x-2 mb-3">
+            <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />
+            <p className="text-gray-700 font-medium">验证登录中...</p>
+          </div>
+          <div className="h-1 w-48 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 animate-pulse rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -353,18 +456,21 @@ function App() {
         {showStats ? (
           <Stats notes={notes} activityData={activityData} darkMode={false} />
         ) : showGraph ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[calc(100vh-12rem)]">
+          <div className="h-[calc(100vh-8rem)]">
             <NoteGraph
-              notes={filteredNotes || []}
-              onNodeClick={(noteId) => {
-                const note = notes.find((n) => n.uuid === noteId);
-                if (note) {
-                  handleNoteClick(note.uuid);
-                }
-              }}
+              notes={notes}
+              onNodeClick={handleNoteClick}
               darkMode={false}
               onTagClick={handleTagClick}
+              focusNoteUuid={focusNoteUuid}
             />
+            <button
+              onClick={handleCloseGraph}
+              className="fixed bottom-6 right-6 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+              aria-label="关闭图谱视图"
+            >
+              <List size={24} />
+            </button>
           </div>
         ) : (
           <div>
@@ -378,6 +484,7 @@ function App() {
               onInputClose={() => setShowInput(false)}
               onNoteClick={handleNoteClick}
               onTagClick={handleTagClick}
+              onShowRelationGraph={handleShowRelationGraph}
             />
           </div>
         )}
@@ -385,14 +492,14 @@ function App() {
 
       {/* 工具栏 - 同步状态和设置 - 固定在右下角 */}
       <div className="fixed right-6 bottom-6 flex flex-col items-end gap-2 z-10">
-        <SyncStatus status={syncStatus} />
+        <SyncStatus status={syncStatus} onSyncRequest={triggerSync} />
 
         <button
           onClick={() => setShowKeyboardShortcuts(true)}
           className="p-2.5 rounded-xl bg-white text-gray-600 hover:bg-gray-100 shadow-sm border border-gray-200 transition-colors"
           aria-label="键盘快捷键"
         >
-          <Keyboard size={20} />
+          <Keyboard size={20} className="text-indigo-600" />
         </button>
 
         <button
@@ -400,7 +507,7 @@ function App() {
           className="p-2.5 rounded-xl bg-white text-gray-600 hover:bg-gray-100 shadow-sm border border-gray-200 transition-colors"
           aria-label="退出登录"
         >
-          <LogOut size={20} />
+          <LogOut size={20} className="text-red-600" />
         </button>
       </div>
 

@@ -17,6 +17,7 @@ interface NoteGraphProps {
   onNodeClick: (uuid: string) => void;
   darkMode: boolean;
   onTagClick?: (tag: string) => void;
+  focusNoteUuid?: string | null;
 }
 
 // 笔记详情卡片组件
@@ -252,6 +253,7 @@ function NoteGraph({
   onNodeClick,
   darkMode,
   onTagClick,
+  focusNoteUuid,
 }: NoteGraphProps) {
   // 添加详情模态框状态
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -288,30 +290,60 @@ function NoteGraph({
   const { nodes, edges } = useMemo(() => {
     const validNotes = notes.filter((note) => note.deleted === 0);
 
-    // 创建一个图连接映射，记录每个节点的连接数
-    const connectionsMap = new Map<string, Set<string>>();
-    validNotes.forEach((note) => {
-      if (!connectionsMap.has(note.uuid)) {
-        connectionsMap.set(note.uuid, new Set());
-      }
+    // 如果有焦点笔记UUID，则只显示与该笔记相关的笔记
+    let notesToShow = validNotes;
+    if (focusNoteUuid) {
+      const focusNote = validNotes.find((note) => note.uuid === focusNoteUuid);
+      if (focusNote) {
+        // 包含焦点笔记
+        const relatedNoteIds = new Set<string>([focusNoteUuid]);
 
-      (note.links || []).forEach((linkUuid) => {
-        if (validNotes.some((n) => n.uuid === linkUuid)) {
-          // 添加双向连接
-          const connections = connectionsMap.get(note.uuid);
-          if (connections) {
-            connections.add(linkUuid);
-          }
-
-          if (!connectionsMap.has(linkUuid)) {
-            connectionsMap.set(linkUuid, new Set());
-          }
-          const targetConnections = connectionsMap.get(linkUuid);
-          if (targetConnections) {
-            targetConnections.add(note.uuid);
-          }
+        // 添加焦点笔记直接链接的笔记
+        if (focusNote.links && focusNote.links.length > 0) {
+          focusNote.links.forEach((linkedId) => relatedNoteIds.add(linkedId));
         }
-      });
+
+        // 添加链接到焦点笔记的笔记（反向链接）
+        validNotes.forEach((note) => {
+          if (note.links && note.links.includes(focusNoteUuid)) {
+            relatedNoteIds.add(note.uuid);
+          }
+        });
+
+        // 过滤只保留相关笔记
+        notesToShow = validNotes.filter((note) =>
+          relatedNoteIds.has(note.uuid)
+        );
+      }
+    }
+
+    // 建立连接映射
+    const connectionsMap = new Map<string, Set<string>>();
+
+    // 初始化映射
+    notesToShow.forEach((note) => {
+      connectionsMap.set(note.uuid, new Set<string>());
+    });
+
+    // 填充映射
+    notesToShow.forEach((note) => {
+      if (note.links) {
+        note.links.forEach((targetId) => {
+          // 确保目标存在于筛选后的笔记中
+          if (notesToShow.some((n) => n.uuid === targetId)) {
+            // 双向连接
+            const sourceConnections = connectionsMap.get(note.uuid);
+            if (sourceConnections) {
+              sourceConnections.add(targetId);
+            }
+
+            const targetConnections = connectionsMap.get(targetId);
+            if (targetConnections) {
+              targetConnections.add(note.uuid);
+            }
+          }
+        });
+      }
     });
 
     // 找出孤立节点（没有连接的节点）
@@ -667,15 +699,33 @@ function NoteGraph({
         })
     );
 
+    // 如果有焦点笔记，需要高亮显示它
+    if (focusNoteUuid) {
+      const nodeIndex = graphNodes.findIndex(
+        (node) => node.id === focusNoteUuid
+      );
+      if (nodeIndex >= 0) {
+        // 高亮焦点节点
+        graphNodes[nodeIndex] = {
+          ...graphNodes[nodeIndex],
+          style: {
+            ...graphNodes[nodeIndex].style,
+            boxShadow: `0 0 0 4px ${
+              darkMode ? "#6366F1" : "#4F46E5"
+            }, 0 4px 16px rgba(99, 102, 241, 0.5)`,
+            borderColor: darkMode ? "#6366F1" : "#4F46E5",
+            borderWidth: "2px",
+            zIndex: 10,
+          },
+        };
+      }
+    }
+
     return { nodes: graphNodes, edges: graphEdges };
-  }, [notes, darkMode, handleTagClick]);
+  }, [notes, darkMode, focusNoteUuid]);
 
   const [nodesState, , onNodesChange] = useNodesState(nodes);
   const [edgesState, , onEdgesChange] = useEdgesState(edges);
-
-  const handleFitView = useCallback(() => {
-    // 这里保留空实现，因为ReactFlow的fitView属性会自动处理
-  }, []);
 
   if (notes.length === 0) {
     return (
@@ -686,7 +736,7 @@ function NoteGraph({
   }
 
   return (
-    <div className="w-full h-[calc(100vh-8rem)] bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+    <div className="relative w-full h-full">
       <ReactFlow
         nodes={nodesState}
         edges={edgesState}
@@ -725,16 +775,41 @@ function NoteGraph({
             borderColor: darkMode ? "#374151" : "#E5E7EB",
           }}
         />
-        <Panel
-          position="top-right"
-          className="bg-white dark:bg-gray-800 p-2 rounded-md shadow-md border border-gray-200 dark:border-gray-700"
-        >
-          <button
-            onClick={handleFitView}
-            className="px-3 py-1 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
-          >
-            居中显示
-          </button>
+        <Panel position="top-left" className="m-2">
+          {focusNoteUuid && (
+            <button
+              onClick={() => {
+                // 使用onNodeClick的方式返回，不使用window.history.back
+                if (typeof window !== "undefined") {
+                  // 隐藏图谱视图的功能应该由父组件处理
+                  const event = new CustomEvent("closeNoteGraph");
+                  window.dispatchEvent(event);
+                }
+              }}
+              className={`px-4 py-2 rounded-lg shadow-sm ${
+                darkMode
+                  ? "bg-gray-800 text-white hover:bg-gray-700"
+                  : "bg-white text-gray-800 hover:bg-gray-50"
+              } flex items-center gap-2 border ${
+                darkMode ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              返回笔记列表
+            </button>
+          )}
         </Panel>
       </ReactFlow>
 

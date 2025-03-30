@@ -36,6 +36,6 @@ export async function generateToken(username: string) {
   return await new jose.SignJWT({ username })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("24h")
+    .setExpirationTime("7d")
     .sign(secretKey);
 }
