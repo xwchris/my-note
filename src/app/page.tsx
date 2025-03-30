@@ -214,7 +214,7 @@ function App() {
   if (isAuthenticating) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 flex items-center justify-center mb-6 shadow-sm">
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-800 to-purple-900 flex items-center justify-center mb-6 shadow-sm">
           <svg
             width="32"
             height="32"
@@ -222,20 +222,41 @@ function App() {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M9 3V5H12V9H9V21H7V9H4V5H7V3H9Z" fill="white" />
+            {/* 北斗七星形状 - 移除外层圆形，放大星星大小 */}
+            <circle cx="5" cy="5" r="1.8" fill="white" />{" "}
+            {/* 天枢 - 最亮的星 */}
+            <circle cx="9" cy="8" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 天璇 */}
+            <circle cx="13" cy="9" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 天玑 */}
+            <circle cx="17" cy="12" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 天权 */}
+            <circle cx="16" cy="16" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 玉衡 */}
+            <circle cx="12" cy="18" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 开阳 */}
+            <circle cx="8" cy="19" r="1.2" fill="white" opacity="0.95" />{" "}
+            {/* 摇光 */}
+            {/* 连接星星的线 */}
             <path
-              d="M14 3V15H11V19H15V21H11V19H13V17H14V15H17V13H14V3H16V13H19V15H16V17H15V19H17V21H15V19H19V17H20V13H17V3H14Z"
-              fill="white"
+              d="M5 5L9 8L13 9L17 12L16 16L12 18L8 19"
+              stroke="white"
+              strokeWidth="0.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
+            {/* 天枢星的光芒效果 */}
+            <circle cx="5" cy="5" r="2.5" fill="white" opacity="0.3" />
+            <circle cx="5" cy="5" r="3.2" fill="white" opacity="0.1" />
           </svg>
         </div>
         <div className="flex flex-col items-center">
           <div className="flex items-center space-x-2 mb-3">
-            <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />
+            <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
             <p className="text-gray-700 font-medium">验证登录中...</p>
           </div>
           <div className="h-1 w-48 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 animate-pulse rounded-full"></div>
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-pulse rounded-full"></div>
           </div>
         </div>
       </div>
@@ -255,7 +276,7 @@ function App() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* 左侧：应用名称和LOGO */}
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 flex items-center justify-center mr-3 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-800 to-purple-900 flex items-center justify-center mr-3 shadow-sm">
               <svg
                 width="24"
                 height="24"
@@ -263,15 +284,72 @@ function App() {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path d="M9 3V5H12V9H9V21H7V9H4V5H7V3H9Z" fill="white" />
-                <path
-                  d="M14 3V15H11V19H15V21H11V19H13V17H14V15H17V13H14V3H16V13H19V15H16V17H15V19H17V21H15V19H19V17H20V13H17V3H14Z"
+                {/* 北斗七星形状 - 移除外层圆形，放大星星大小 */}
+                <circle cx="5" cy="5" r="1.8" fill="white" />{" "}
+                {/* 天枢 - 最亮的星 */}
+                <circle
+                  cx="9"
+                  cy="8"
+                  r="1.2"
                   fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 天璇 */}
+                <circle
+                  cx="13"
+                  cy="9"
+                  r="1.2"
+                  fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 天玑 */}
+                <circle
+                  cx="17"
+                  cy="12"
+                  r="1.2"
+                  fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 天权 */}
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="1.2"
+                  fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 玉衡 */}
+                <circle
+                  cx="12"
+                  cy="18"
+                  r="1.2"
+                  fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 开阳 */}
+                <circle
+                  cx="8"
+                  cy="19"
+                  r="1.2"
+                  fill="white"
+                  opacity="0.95"
+                />{" "}
+                {/* 摇光 */}
+                {/* 连接星星的线 */}
+                <path
+                  d="M5 5L9 8L13 9L17 12L16 16L12 18L8 19"
+                  stroke="white"
+                  strokeWidth="0.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
+                {/* 天枢星的光芒效果 */}
+                <circle cx="5" cy="5" r="2.5" fill="white" opacity="0.3" />
+                <circle cx="5" cy="5" r="3.2" fill="white" opacity="0.1" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
-              My Note
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-700">
+              天枢录
             </h1>
           </div>
 
@@ -283,7 +361,7 @@ function App() {
                 placeholder="搜索笔记内容或标签..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-2 pl-10 pr-4 bg-gray-100 border-0 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-300"
+                className="w-full py-2 pl-10 pr-4 bg-gray-100 border-0 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-300"
               />
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Search className="text-gray-400" size={18} />
@@ -307,13 +385,13 @@ function App() {
               aria-label="筛选"
               className={`relative rounded-xl p-2 ${
                 showTagFilter
-                  ? "bg-indigo-100 text-indigo-600"
+                  ? "bg-blue-100 text-blue-600"
                   : "text-gray-500 hover:bg-gray-100"
               }`}
             >
               <Filter size={20} />
               {allTags.length > 0 && !showTagFilter && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
               )}
             </button>
 
@@ -326,7 +404,7 @@ function App() {
               aria-label="查看统计"
               className={`rounded-xl p-2 ${
                 showStats
-                  ? "bg-indigo-100 text-indigo-600"
+                  ? "bg-blue-100 text-blue-600"
                   : "text-gray-500 hover:bg-gray-100"
               }`}
               title="⌘S"
@@ -342,7 +420,7 @@ function App() {
               aria-label="切换视图"
               className={`rounded-xl p-2 ${
                 showGraph
-                  ? "bg-indigo-100 text-indigo-600"
+                  ? "bg-blue-100 text-blue-600"
                   : "text-gray-500 hover:bg-gray-100"
               }`}
             >
@@ -352,7 +430,7 @@ function App() {
             {/* 新建笔记按钮 */}
             <button
               onClick={() => setShowInput(true)}
-              className="ml-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 text-white rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+              className="ml-2 px-4 py-2 bg-gradient-to-r from-blue-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl transition-colors flex items-center gap-2 shadow-sm"
               title="⌘M"
             >
               <PlusCircle size={16} />
@@ -381,7 +459,7 @@ function App() {
                 onClick={() => setSelectedTag(null)}
                 className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
                   selectedTag === null
-                    ? "bg-indigo-100 text-indigo-800"
+                    ? "bg-blue-100 text-blue-800"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -394,7 +472,7 @@ function App() {
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
                     selectedTag === tag
-                      ? "bg-indigo-100 text-indigo-800"
+                      ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -466,7 +544,7 @@ function App() {
             />
             <button
               onClick={handleCloseGraph}
-              className="fixed bottom-6 right-6 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+              className="fixed bottom-6 right-6 bg-blue-700 text-white p-3 rounded-full shadow-lg hover:bg-blue-800 transition-colors"
               aria-label="关闭图谱视图"
             >
               <List size={24} />
@@ -499,7 +577,7 @@ function App() {
           className="p-2.5 rounded-xl bg-white text-gray-600 hover:bg-gray-100 shadow-sm border border-gray-200 transition-colors"
           aria-label="键盘快捷键"
         >
-          <Keyboard size={20} className="text-indigo-600" />
+          <Keyboard size={20} className="text-blue-600" />
         </button>
 
         <button

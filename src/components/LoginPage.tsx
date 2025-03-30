@@ -42,7 +42,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-5">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 flex items-center justify-center shadow-sm">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-800 to-purple-900 flex items-center justify-center shadow-sm">
                 <svg
                   width="40"
                   height="40"
@@ -50,16 +50,27 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M9 3V5H12V9H9V21H7V9H4V5H7V3H9Z" fill="white" />
+                  <circle cx="5" cy="5" r="1.8" fill="white" />
+                  <circle cx="9" cy="8" r="1.2" fill="white" opacity="0.95" />
+                  <circle cx="13" cy="9" r="1.2" fill="white" opacity="0.95" />
+                  <circle cx="17" cy="12" r="1.2" fill="white" opacity="0.95" />
+                  <circle cx="16" cy="16" r="1.2" fill="white" opacity="0.95" />
+                  <circle cx="12" cy="18" r="1.2" fill="white" opacity="0.95" />
+                  <circle cx="8" cy="19" r="1.2" fill="white" opacity="0.95" />
                   <path
-                    d="M14 3V15H11V19H15V21H11V19H13V17H14V15H17V13H14V3H16V13H19V15H16V17H15V19H17V21H15V19H19V17H20V13H17V3H14Z"
-                    fill="white"
+                    d="M5 5L9 8L13 9L17 12L16 16L12 18L8 19"
+                    stroke="white"
+                    strokeWidth="0.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
+                  <circle cx="5" cy="5" r="2.5" fill="white" opacity="0.3" />
+                  <circle cx="5" cy="5" r="3.2" fill="white" opacity="0.1" />
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
-              My Note
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-700">
+              天枢录
             </h1>
             <p className="mt-2 text-gray-500">请登录以继续使用您的笔记</p>
           </div>
@@ -95,7 +106,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
+                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
                 required
               />
             </div>
@@ -112,7 +123,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
+                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
                 required
               />
             </div>
@@ -120,7 +131,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3 mt-2 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 mt-2 bg-gradient-to-r from-blue-700 to-purple-800 hover:from-blue-800 hover:to-purple-900 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {isLoading ? "登录中..." : "登录"}
               {!isLoading && <LogIn size={18} />}

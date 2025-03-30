@@ -5,7 +5,7 @@ import "./global.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "我的笔记应用",
+  title: "天枢录",
   description: "一个简单的笔记应用，用于记录想法和灵感",
   icons: {
     icon: "/favicon.svg",
