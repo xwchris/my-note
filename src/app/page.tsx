@@ -11,9 +11,6 @@ import {
   LogOut,
   Hash,
   Filter,
-  Settings,
-  Grid,
-  Menu,
   BarChart2,
 } from "lucide-react";
 import { Toaster } from "react-hot-toast";
@@ -26,21 +23,13 @@ import { useNotes } from "@/hooks/useNotes";
 import { AuthService } from "@/services/AuthService";
 import Stats from "@/components/Stats";
 import "./index.css";
-// import { getActivityData } from "./utils/stats";
 
 function App() {
   // 使用 useCallback 来避免不必要的重渲染
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const {
-    notes,
-    addNote,
-    updateNote,
-    deleteNote,
-    syncStatus,
-    activityData,
-    totalDays,
-  } = useNotes();
+  const { notes, addNote, updateNote, deleteNote, syncStatus, activityData } =
+    useNotes();
   const [showInput, setShowInput] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);

@@ -144,9 +144,6 @@ export class SyncService {
       const localNotesMap = new Map(
         localNotes.map((note) => [note.uuid, note])
       );
-      const remoteNotesMap = new Map(
-        remoteNotes.map((note) => [note.uuid, note])
-      );
 
       const pendingNotes = await this.db.getPendingNotes();
       for (const note of pendingNotes) {

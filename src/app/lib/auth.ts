@@ -6,6 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 // 创建密钥对象
 const secretKey = new TextEncoder().encode(JWT_SECRET);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function authenticateToken(request: NextRequest) {
   const headersList = await headers();
   const authorization = headersList.get("authorization");
@@ -24,7 +25,7 @@ export async function authenticateToken(request: NextRequest) {
     return payload;
   } catch (error) {
     return NextResponse.json(
-      { error: "Invalid or expired token" },
+      { error: (error as Error).message || "Invalid or expired token" },
       { status: 403 }
     );
   }

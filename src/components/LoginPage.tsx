@@ -28,6 +28,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
         toast.error("用户名或密码错误");
       }
     } catch (error) {
+      console.log((error as Error).message);
       setError("登录失败，请检查网络连接后重试");
       toast.error("登录失败，请检查网络连接后重试");
     } finally {

@@ -64,6 +64,7 @@ export class GitHubStorageService {
         }
       } catch (error) {
         // 如果文件不存在，继续创建
+        console.log((error as Error).message);
       }
 
       // 更新或创建文件
@@ -146,6 +147,7 @@ export class GitHubStorageService {
         }
       } catch (error) {
         // 如果文件不存在，继续创建
+        console.log((error as Error).message);
       }
 
       // 更新或创建文件

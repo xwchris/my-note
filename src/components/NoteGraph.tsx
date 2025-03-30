@@ -275,12 +275,15 @@ function NoteGraph({
   }, []);
 
   // 处理标签点击
-  const handleTagClick = (tag: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止触发节点点击
-    if (onTagClick) {
-      onTagClick(tag);
-    }
-  };
+  const handleTagClick = useCallback(
+    (tag: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onTagClick) {
+        onTagClick(tag);
+      }
+    },
+    [onTagClick]
+  );
 
   const { nodes, edges } = useMemo(() => {
     const validNotes = notes.filter((note) => note.deleted === 0);
@@ -425,7 +428,7 @@ function NoteGraph({
     let groupXOffset = -800; // 组的起始x坐标
 
     // 为每个连通分量计算布局
-    connectedComponents.forEach((component, componentIndex) => {
+    connectedComponents.forEach((component) => {
       // 获取该组件的层次结构
       const hierarchy = buildComponentHierarchy(component);
 
@@ -456,7 +459,6 @@ function NoteGraph({
     // 孤立节点放在最右侧，垂直排列
     if (isolatedNodes.length > 0) {
       const itemsPerColumn = 6; // 每列最多显示6个孤立节点
-      const columns = Math.ceil(isolatedNodes.length / itemsPerColumn);
 
       isolatedNodes.forEach((note, index) => {
         const column = Math.floor(index / itemsPerColumn);
@@ -494,12 +496,9 @@ function NoteGraph({
       ];
 
       // 计算摘要和其他信息
-      const firstLine = note.content.split("\n")[0] || "无标题";
       const createdDate = note.createdAt
         ? new Date(note.createdAt).toLocaleDateString()
         : "未知日期";
-      const excerpt =
-        note.content.slice(0, 60) + (note.content.length > 60 ? "..." : "");
 
       // 设置边框颜色 - 使用组的颜色或灰色（孤立节点）
       const borderColor =
@@ -669,7 +668,7 @@ function NoteGraph({
     );
 
     return { nodes: graphNodes, edges: graphEdges };
-  }, [notes, darkMode, onTagClick]);
+  }, [notes, darkMode, handleTagClick]);
 
   const [nodesState, , onNodesChange] = useNodesState(nodes);
   const [edgesState, , onEdgesChange] = useEdgesState(edges);

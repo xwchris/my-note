@@ -1,17 +1,13 @@
 import React, { useMemo } from "react";
 import { Note, ActivityData } from "../types";
 import {
-  BarChart2,
-  Calendar,
   Hash,
   Tag,
-  Clock,
   Link,
   FileText,
   TrendingUp,
-  Bookmark,
-  Calendar as CalendarIcon,
   Activity,
+  Clock,
 } from "lucide-react";
 import {
   Chart as ChartJS,
@@ -29,7 +25,6 @@ import {
 import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 import { format, parseISO } from "date-fns";
-import { zhCN } from "date-fns/locale";
 
 // 注册Chart.js组件
 ChartJS.register(
@@ -221,12 +216,14 @@ function Stats({ notes, activityData, darkMode }: StatsProps) {
   // 准备标签分布饼图数据
   const tagChartData = useMemo(() => {
     const tagNames = statsData.topTags.slice(0, 7).map(([tag]) => tag);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const tagCounts = statsData.topTags.slice(0, 7).map(([_, count]) => count);
 
     // 如果有超过7个标签，将剩余的归为"其他"类别
     if (statsData.topTags.length > 7) {
       const otherTagsCount = statsData.topTags
         .slice(7)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .reduce((sum, [_, count]) => sum + count, 0);
       tagNames.push("其他");
       tagCounts.push(otherTagsCount);
@@ -294,6 +291,7 @@ function Stats({ notes, activityData, darkMode }: StatsProps) {
       datasets: [
         {
           label: "笔记数量",
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           data: statsData.activityByMonth.map(([_, count]) => count),
           backgroundColor: chartColors.secondary,
           borderColor: chartColors.secondary,

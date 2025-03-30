@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Tag,
-  Clock,
   Trash2,
   Edit2,
   X,
@@ -41,7 +39,6 @@ function NoteCard({
   const [editLinks, setEditLinks] = useState<string[]>(note.links || []);
   const [tagInput, setTagInput] = useState("");
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [showActions, setShowActions] = useState(false);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {

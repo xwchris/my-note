@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { NotesDatabase } from "@/db/database";
 import { SyncService } from "@/services/SyncService";
 import { Note, SyncStatus, ActivityData } from "@/types";
+import debounce from "lodash.debounce";
 
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -60,15 +61,6 @@ export function useNotes() {
     };
   }, []);
 
-  // 防抖函数，用于避免频繁处理
-  const debounce = useCallback((fn: Function, delay: number) => {
-    let timer: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), delay);
-    };
-  }, []);
-
   // 限流添加笔记
   const addNote = useCallback(async (content: string, tags: string[]) => {
     try {
@@ -97,6 +89,7 @@ export function useNotes() {
   }, []);
 
   // 限流更新笔记
+  // eslint-disable-next-line
   const updateNote = useCallback(
     debounce(
       async (
