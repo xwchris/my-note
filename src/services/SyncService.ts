@@ -2,7 +2,7 @@ import axios from "axios";
 import { Note, SyncStatus, ActivityData } from "@/types";
 import { AuthService } from "./AuthService";
 import { NotesDatabase } from "@/db/database";
-import debounce from "lodash/debounce";
+import debounce from "lodash.debounce";
 
 const API_URL = "/api";
 const SYNC_DEBOUNCE_DELAY = 2000; // 2秒防抖延迟
