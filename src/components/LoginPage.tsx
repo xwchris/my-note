@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { LogIn } from "lucide-react";
-import { AuthService } from "../services/AuthService";
+import { AuthService } from "@/services/AuthService";
 import toast from "react-hot-toast";
 
 interface LoginPageProps {
@@ -36,21 +36,48 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              思绪笔记
+            <div className="flex justify-center mb-5">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 flex items-center justify-center shadow-sm">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M9 3V5H12V9H9V21H7V9H4V5H7V3H9Z" fill="white" />
+                  <path
+                    d="M14 3V15H11V19H15V21H11V19H13V17H14V15H17V13H14V3H16V13H19V15H16V17H15V19H17V21H15V19H19V17H20V13H17V3H14Z"
+                    fill="white"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
+              My Note
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              请登录以继续
-            </p>
+            <p className="mt-2 text-gray-500">请登录以继续使用您的笔记</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg text-sm">
+              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
                 {error}
               </div>
             )}
@@ -58,7 +85,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
               >
                 用户名
               </label>
@@ -67,7 +94,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
                 required
               />
             </div>
@@ -75,7 +102,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
               >
                 密码
               </label>
@@ -84,7 +111,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
                 required
               />
             </div>
@@ -92,12 +119,16 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 mt-2 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              <LogIn size={20} />
               {isLoading ? "登录中..." : "登录"}
+              {!isLoading && <LogIn size={18} />}
             </button>
           </form>
+
+          <div className="pt-2 text-center">
+            <p className="text-sm text-gray-500">没有账号？请联系管理员创建</p>
+          </div>
         </div>
       </div>
     </div>

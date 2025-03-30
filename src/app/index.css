@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+.react-flow__node {
+  @apply font-sans;
+}
+
+.react-flow__node-default {
+  @apply shadow-sm;
+}
+
+.react-flow__controls button {
+  @apply bg-white border-gray-200 text-gray-600;
+}
+
+.react-flow__minimap {
+  @apply bg-white border-gray-200;
+}

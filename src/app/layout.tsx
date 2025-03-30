@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
+import "./global.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "My Note",
-  description: "个人笔记应用",
+  title: "我的笔记应用",
+  description: "一个简单的笔记应用，用于记录想法和灵感",
 };
 
 export default function RootLayout({
@@ -15,10 +15,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh">
-      <body className={inter.className}>
-        <main className="flex min-h-screen flex-col">{children}</main>
-      </body>
+    <html lang="zh-CN">
+      <head>
+        {/* 避免SSR相关错误的相关标记 */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
+
+// 为导入的客户端组件添加特定配置
+export const dynamic = "force-dynamic";
+export const runtime = "edge";

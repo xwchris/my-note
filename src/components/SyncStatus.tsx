@@ -35,26 +35,31 @@ function SyncStatus({ status }: SyncStatusProps) {
 
   const statusConfig = {
     syncing: {
-      text: "text-gray-500 dark:text-gray-400",
+      text: "text-indigo-600",
+      bg: "bg-indigo-50 border-indigo-100",
       message: "正在同步...",
-      icon: <ArrowUpDown className="animate-pulse" size={14} />,
+      icon: <ArrowUpDown className="animate-pulse" size={16} />,
     },
     error: {
-      text: "text-red-500 dark:text-red-400",
+      text: "text-red-600",
+      bg: "bg-red-50 border-red-100",
       message: "同步失败",
-      icon: <ArrowUpDown size={14} />,
+      icon: <ArrowUpDown size={16} />,
     },
     offline: {
-      text: "text-gray-500 dark:text-gray-400",
+      text: "text-gray-600",
+      bg: "bg-gray-50 border-gray-200",
       message: "离线模式",
-      icon: <ArrowUpDown size={14} />,
+      icon: <ArrowUpDown size={16} />,
     },
   };
 
   const config = statusConfig[displayStatus];
 
   return (
-    <div className={`flex items-center gap-1 text-xs ${config.text}`}>
+    <div
+      className={`px-3 py-1.5 ${config.bg} rounded-xl shadow-sm flex items-center gap-2 text-xs font-medium ${config.text}`}
+    >
       {config.icon}
       <span>{config.message}</span>
     </div>

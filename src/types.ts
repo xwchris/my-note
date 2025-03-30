@@ -1,44 +1,23 @@
 export interface Note {
-  id: string;
-  title: string;
+  uuid: string;
   content: string;
   tags: string[];
   createdAt: string;
-  updatedAt?: string;
-}
-
-export interface Tag {
-  name: string;
-  count: number;
-}
-
-export interface NoteListProps {
-  notes: Note[];
-  onNoteSelect: (note: Note) => void;
-  selectedNoteId?: string;
-  filter?: string;
-}
-
-export interface NoteCardProps {
-  note: Note;
-  isSelected: boolean;
-  onClick: () => void;
-}
-
-export interface NoteInputProps {
-  onSubmit: (note: Omit<Note, "id" | "createdAt">) => void;
-  initialValue?: Partial<Note>;
-}
-
-export interface SidebarProps {
-  tags: Tag[];
-  selectedTag?: string;
-  onTagSelect: (tag: string) => void;
+  lastEdited?: string;
+  links: string[]; // Changed from number[] to string[] to store UUIDs
+  version: number;
+  syncStatus: "pending" | "synced" | "error";
+  deleted: number; // 0 = not deleted, 1 = deleted
 }
 
 export interface ActivityData {
   date: string;
   count: number;
+}
+
+export interface Stats {
+  activityData: ActivityData[];
+  totalDays: number;
 }
 
 export interface BacklinkReference {

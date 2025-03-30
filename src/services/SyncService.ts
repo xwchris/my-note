@@ -1,34 +1,32 @@
 import axios from "axios";
-import { NotesDatabase } from "../db/database";
-import { Note, SyncStatus, ActivityData } from "../types";
+import { Note, SyncStatus, ActivityData } from "@/types";
 import { AuthService } from "./AuthService";
+import { NotesDatabase } from "@/db/database";
+import debounce from "lodash/debounce";
 
-const API_URL = "http://" + location.hostname + ":12001/api";
-const SYNC_INTERVAL = 5000;
-const CONNECTION_CHECK_INTERVAL = 3000;
+const API_URL = "/api";
+const SYNC_DEBOUNCE_DELAY = 2000; // 2秒防抖延迟
 
 export class SyncService {
   private db: NotesDatabase;
-  private syncInProgress = false;
-  private syncInterval: NodeJS.Timeout | null = null;
-  private connectionInterval: NodeJS.Timeout | null = null;
   private setStatus: (status: SyncStatus) => void;
-  private lastConnectionStatus = true;
-  private onStatsUpdate?: (
+  private onStatsUpdate: (
     activityData: ActivityData[],
     totalDays: number
   ) => void;
-  private pendingSyncs = 0;
+  private syncInProgress: boolean = false;
+  private pendingSyncs: number = 0;
+  private lastConnectionStatus: boolean = true;
+  private initialSyncDone: boolean = false;
 
   constructor(
     setStatus: (status: SyncStatus) => void,
-    onStatsUpdate?: (activityData: ActivityData[], totalDays: number) => void
+    onStatsUpdate: (activityData: ActivityData[], totalDays: number) => void
   ) {
     this.db = new NotesDatabase();
     this.setStatus = setStatus;
     this.onStatsUpdate = onStatsUpdate;
-    this.startConnectionCheck();
-    this.startPeriodicSync();
+    this.performInitialSync();
   }
 
   private getAuthHeaders() {
@@ -54,104 +52,38 @@ export class SyncService {
     }
   }
 
-  private startConnectionCheck() {
-    this.checkConnection().then((isConnected) => {
-      this.lastConnectionStatus = isConnected;
-      this.setStatus(isConnected ? "idle" : "offline");
-      if (isConnected) {
-        this.performFullSync();
-      }
-    });
-
-    this.connectionInterval = setInterval(async () => {
-      const isConnected = await this.checkConnection();
-
-      if (isConnected !== this.lastConnectionStatus) {
-        this.lastConnectionStatus = isConnected;
-
-        if (isConnected) {
-          this.setStatus("syncing");
-          this.performFullSync();
-          this.startPeriodicSync();
-        } else {
-          this.setStatus("offline");
-          this.stopPeriodicSync();
-        }
-      }
-    }, CONNECTION_CHECK_INTERVAL);
-  }
-
-  private startPeriodicSync() {
-    if (!this.syncInterval) {
-      this.syncInterval = setInterval(() => {
-        if (this.lastConnectionStatus) {
-          this.performFullSync();
-        }
-      }, SYNC_INTERVAL);
-    }
-  }
-
-  private stopPeriodicSync() {
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-      this.syncInterval = null;
+  private updateSyncStatus() {
+    if (this.pendingSyncs > 0) {
+      this.setStatus("syncing");
+    } else if (!this.lastConnectionStatus) {
+      this.setStatus("offline");
+    } else {
+      this.setStatus("idle");
     }
   }
 
   private async fetchRemoteNotes(): Promise<Note[]> {
-    try {
-      const response = await axios.get(`${API_URL}/notes`, {
-        headers: this.getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch remote notes:", error);
-      throw error;
-    }
+    const response = await axios.get(`${API_URL}/notes`, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
   }
 
-  private async fetchStats(): Promise<{
-    activityData: ActivityData[];
-    totalDays: number;
-  }> {
-    try {
-      const response = await axios.get(`${API_URL}/stats`, {
-        headers: this.getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-      throw error;
-    }
+  private async fetchStats() {
+    const response = await axios.get(`${API_URL}/stats`, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
   }
 
-  private async handleConflict(
-    localNote: Note,
-    serverNote: Note
-  ): Promise<void> {
-    const serverDate = new Date(serverNote.lastEdited || serverNote.createdAt);
-    const localDate = new Date(localNote.lastEdited || localNote.createdAt);
-
-    if (serverDate > localDate) {
-      await this.db.updateNote(serverNote);
-    } else {
-      await this.syncNote(localNote);
-    }
+  private async handleConflict(localNote: Note, serverNote: Note) {
+    // 在这里可以实现更复杂的冲突解决策略
+    // 目前简单地采用服务器版本
+    await this.db.updateNote({ ...serverNote, syncStatus: "synced" });
   }
 
-  private updateSyncStatus() {
-    if (this.pendingSyncs > 0) {
-      this.setStatus("syncing");
-    } else if (this.lastConnectionStatus) {
-      this.setStatus("idle");
-    } else {
-      this.setStatus("offline");
-    }
-  }
-
-  private async syncNote(note: Note): Promise<void> {
-    if (!this.lastConnectionStatus) {
-      this.setStatus("offline");
+  private debouncedSync = debounce(async (note: Note) => {
+    if (!this.lastConnectionStatus || !this.initialSyncDone) {
       return;
     }
 
@@ -185,12 +117,11 @@ export class SyncService {
         AuthService.clearToken();
       }
       this.setStatus("error");
-      throw error;
     } finally {
       this.pendingSyncs--;
       this.updateSyncStatus();
     }
-  }
+  }, SYNC_DEBOUNCE_DELAY);
 
   private async performFullSync(): Promise<void> {
     if (this.syncInProgress || !this.lastConnectionStatus) {
@@ -219,7 +150,7 @@ export class SyncService {
 
       const pendingNotes = await this.db.getPendingNotes();
       for (const note of pendingNotes) {
-        await this.syncNote(note);
+        await this.debouncedSync(note);
       }
 
       for (const remoteNote of remoteNotes) {
@@ -237,6 +168,7 @@ export class SyncService {
       }
 
       await this.db.updateLastSyncTime();
+      this.initialSyncDone = true;
       this.updateSyncStatus();
     } catch (error) {
       console.error("Full sync failed:", error);
@@ -249,35 +181,47 @@ export class SyncService {
     }
   }
 
-  public async addNote(note: Note): Promise<void> {
+  private async performInitialSync() {
+    this.lastConnectionStatus = await this.checkConnection();
+    if (this.lastConnectionStatus) {
+      await this.performFullSync();
+    } else {
+      this.setStatus("offline");
+    }
+
+    // 设置连接状态检查定时器
+    setInterval(async () => {
+      const newStatus = await this.checkConnection();
+      if (newStatus !== this.lastConnectionStatus) {
+        this.lastConnectionStatus = newStatus;
+        if (newStatus) {
+          await this.performFullSync();
+        } else {
+          this.setStatus("offline");
+        }
+      }
+    }, 30000); // 每30秒检查一次连接状态
+  }
+
+  async addNote(note: Note): Promise<void> {
     await this.db.addNote(note);
-    if (this.lastConnectionStatus) {
-      await this.syncNote(note);
-    }
+    await this.debouncedSync(note);
   }
 
-  public async updateNote(note: Note): Promise<void> {
+  async updateNote(note: Note): Promise<void> {
     await this.db.updateNote(note);
-    if (this.lastConnectionStatus) {
-      await this.syncNote(note);
-    }
+    await this.debouncedSync(note);
   }
 
-  public async deleteNote(uuid: string): Promise<void> {
+  async deleteNote(uuid: string): Promise<void> {
     await this.db.deleteNote(uuid);
-    const deletedNote = await this.db
-      .getAllNotes()
-      .then((notes) => notes.find((n) => n.uuid === uuid));
-    if (deletedNote && this.lastConnectionStatus) {
-      await this.syncNote(deletedNote);
+    const note = await this.db.getNote(uuid);
+    if (note) {
+      await this.debouncedSync(note);
     }
   }
 
-  public destroy() {
-    this.stopPeriodicSync();
-    if (this.connectionInterval) {
-      clearInterval(this.connectionInterval);
-      this.connectionInterval = null;
-    }
+  destroy() {
+    this.debouncedSync.cancel();
   }
 }

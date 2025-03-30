@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateToken } from "@/app/lib/auth";
-import { readNotes } from "@/app/lib/notes";
+import { readNotes, updateActivityStats } from "@/app/lib/notes";
 
 export async function GET(request: NextRequest) {
   const authResult = await authenticateToken(request);
@@ -10,9 +10,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const notes = await readNotes();
-    return NextResponse.json(notes);
+    const stats = await updateActivityStats(notes);
+    return NextResponse.json(stats);
   } catch (error) {
-    console.error("Failed to get notes:", error);
-    return NextResponse.json({ error: "Failed to get notes" }, { status: 500 });
+    console.error("Failed to get stats:", error);
+    return NextResponse.json({ error: "Failed to get stats" }, { status: 500 });
   }
 }
