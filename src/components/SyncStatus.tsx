@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { SyncStatus as SyncStatusType } from "../types";
 
@@ -8,28 +8,38 @@ interface SyncStatusProps {
 
 function SyncStatus({ status }: SyncStatusProps) {
   const [displayStatus, setDisplayStatus] = useState<SyncStatusType>("idle");
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const displayStatusRef = useRef<SyncStatusType>(displayStatus);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 更新 ref 以跟踪最新状态
+  useEffect(() => {
+    displayStatusRef.current = displayStatus;
+  }, [displayStatus]);
 
   useEffect(() => {
-    if (timer) {
-      clearTimeout(timer);
+    // 清除之前的定时器
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
 
-    if (status === "idle" && displayStatus !== "idle") {
-      const newTimer = setTimeout(() => {
+    // 状态转换逻辑
+    if (status === "idle" && displayStatusRef.current !== "idle") {
+      timerRef.current = setTimeout(() => {
         setDisplayStatus("idle");
       }, 1000);
-      setTimer(newTimer);
     } else {
       setDisplayStatus(status);
     }
 
+    // 清理函数
     return () => {
-      if (timer) {
-        clearTimeout(timer);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [status, timer, displayStatus]);
+  }, [status]); // 只依赖于status属性变化
 
   if (displayStatus === "idle") return null;
 
