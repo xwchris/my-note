@@ -24,28 +24,33 @@ function SyncStatus({ status, onSyncRequest }: SyncStatusProps) {
 
   // 更新 ref 以跟踪最新状态
   useEffect(() => {
+    console.log("Status from props:", status);
     displayStatusRef.current = displayStatus;
   }, [displayStatus]);
 
   useEffect(() => {
+    console.log("Status changed:", status);
     // 清除之前的定时器
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
 
+    // 确保状态有效
+    const newStatus = status || "idle";
+
     // 直接设置显示状态
-    setDisplayStatus(status);
+    setDisplayStatus(newStatus);
 
     // 如果状态刚刚变为idle，显示文字，然后设置定时器隐藏文字
-    if (status === "idle" && displayStatusRef.current !== "idle") {
+    if (newStatus === "idle" && displayStatusRef.current !== "idle") {
       setShowIdleText(true);
 
       timerRef.current = setTimeout(() => {
         // 使用CSS过渡动画，先设置状态
         setShowIdleText(false);
       }, 1500); // 缩短为1.5秒
-    } else if (status !== "idle") {
+    } else if (newStatus !== "idle") {
       // 非idle状态下总是显示文字
       setShowIdleText(true);
     }
@@ -74,6 +79,12 @@ function SyncStatus({ status, onSyncRequest }: SyncStatusProps) {
       message: "正在同步...",
       icon: <ArrowUpDown className="animate-pulse" size={20} />,
     },
+    initializing: {
+      text: "text-blue-600",
+      bg: "bg-white",
+      message: "正在初始化...",
+      icon: <ArrowUpDown className="animate-pulse" size={20} />,
+    },
     error: {
       text: "text-red-600",
       bg: "bg-white",
@@ -97,6 +108,7 @@ function SyncStatus({ status, onSyncRequest }: SyncStatusProps) {
 
   // 使用当前显示状态
   const config = statusConfig[displayStatus];
+  console.log(displayStatus, config);
 
   // 如果是idle状态且不显示文字，使用更小巧的样式
   const isCompact = displayStatus === "idle" && !showIdleText;

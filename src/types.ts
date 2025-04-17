@@ -32,4 +32,9 @@ export interface SyncMetadata {
   lastSync: string;
 }
 
-export type SyncStatus = "idle" | "syncing" | "error" | "offline";
+export type SyncStatus =
+  | "idle"
+  | "syncing"
+  | "error"
+  | "offline"
+  | "initializing";

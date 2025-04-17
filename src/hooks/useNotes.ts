@@ -7,9 +7,9 @@ import debounce from "lodash.debounce";
 
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [status, setStatus] = useState<SyncStatus>("initializing");
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
-  const [totalDays, setTotalDays] = useState(0);
+  const [totalDays, setTotalDays] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   // 使用useRef存储实例，避免多次创建
@@ -18,46 +18,59 @@ export function useNotes() {
 
   // 初始化数据库和同步服务
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    let isMounted = true;
 
-    try {
-      if (!dbRef.current) {
-        dbRef.current = new NotesDatabase();
-      }
-
-      if (!syncServiceRef.current) {
-        syncServiceRef.current = new SyncService(
-          setSyncStatus,
-          (newActivityData, newTotalDays) => {
-            setActivityData(newActivityData);
-            setTotalDays(newTotalDays);
-          }
-        );
-      }
-
-      const loadNotes = async () => {
-        try {
-          if (!dbRef.current) return;
-          const storedNotes = await dbRef.current.getAllNotes();
-          setNotes(storedNotes);
-          setError(null);
-        } catch (err) {
-          console.error("Failed to load notes:", err);
-          setError("加载笔记失败");
+    const loadNotes = async () => {
+      try {
+        if (!dbRef.current) {
+          dbRef.current = new NotesDatabase();
         }
-      };
+        const notes = await dbRef.current.getAllNotes();
+        if (isMounted) {
+          setNotes(notes);
+          // 只有在成功加载笔记后才设置为 idle 状态
+          if (status === "initializing") {
+            setStatus("idle");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load notes:", err);
+        if (isMounted) {
+          setError("Failed to load notes");
+          setStatus("error");
+        }
+      }
+    };
 
-      loadNotes();
-    } catch (err) {
-      console.error("初始化数据服务失败:", err);
-      setError("初始化数据服务失败");
+    if (!dbRef.current) {
+      dbRef.current = new NotesDatabase();
     }
 
-    // 清理函数
+    if (!syncServiceRef.current) {
+      syncServiceRef.current = new SyncService(
+        (status) => {
+          if (isMounted) {
+            setStatus(status);
+          }
+        },
+        (activityData, totalDays) => {
+          if (isMounted) {
+            setActivityData(activityData);
+            setTotalDays(totalDays);
+          }
+        },
+        () => {
+          if (isMounted) {
+            loadNotes();
+          }
+        }
+      );
+    }
+
+    loadNotes();
+
     return () => {
-      if (syncServiceRef.current) {
-        syncServiceRef.current.destroy();
-      }
+      isMounted = false;
     };
   }, []);
 
@@ -173,7 +186,7 @@ export function useNotes() {
     addNote,
     updateNote,
     deleteNote,
-    syncStatus,
+    status,
     activityData,
     totalDays,
     error,
