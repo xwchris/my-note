@@ -13,6 +13,7 @@ export class SyncService {
     activityData: ActivityData[],
     totalDays: number
   ) => void;
+  private onNotesUpdate: () => void;
   private syncInProgress: boolean = false;
   private pendingSyncs: number = 0;
   private lastConnectionStatus: boolean = true;
@@ -20,11 +21,13 @@ export class SyncService {
 
   constructor(
     setStatus: (status: SyncStatus) => void,
-    onStatsUpdate: (activityData: ActivityData[], totalDays: number) => void
+    onStatsUpdate: (activityData: ActivityData[], totalDays: number) => void,
+    onNotesUpdate: () => void
   ) {
     this.db = new NotesDatabase();
     this.setStatus = setStatus;
     this.onStatsUpdate = onStatsUpdate;
+    this.onNotesUpdate = onNotesUpdate;
     this.performInitialSync();
   }
 
@@ -46,10 +49,12 @@ export class SyncService {
   }
 
   private updateSyncStatus() {
-    if (this.pendingSyncs > 0) {
+    if (!this.initialSyncDone) {
+      this.setStatus("initializing");
+    } else if (this.pendingSyncs > 0) {
       this.setStatus("syncing");
     } else if (!this.lastConnectionStatus) {
-      this.setStatus("offline");
+      this.setStatus("error");
     } else {
       this.setStatus("idle");
     }
@@ -136,18 +141,25 @@ export class SyncService {
         await this.debouncedSync(note);
       }
 
+      let hasChanges = false;
       for (const remoteNote of remoteNotes) {
         const localNote = localNotesMap.get(remoteNote.uuid);
 
         if (!localNote) {
           await this.db.addNote({ ...remoteNote, syncStatus: "synced" });
+          hasChanges = true;
         } else if (remoteNote.version > localNote.version) {
           await this.db.updateNote({ ...remoteNote, syncStatus: "synced" });
+          hasChanges = true;
         }
       }
 
       if (this.onStatsUpdate) {
         this.onStatsUpdate(stats.activityData, stats.totalDays);
+      }
+
+      if (hasChanges && this.onNotesUpdate) {
+        this.onNotesUpdate();
       }
 
       await this.db.updateLastSyncTime();
