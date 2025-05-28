@@ -36,7 +36,7 @@ function App() {
     addNote,
     updateNote,
     deleteNote,
-    syncStatus,
+    status: syncStatus,
     activityData,
     triggerSync,
   } = useNotes();
